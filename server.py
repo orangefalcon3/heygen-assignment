@@ -4,8 +4,7 @@ from fastapi import FastAPI
 class JobHandler:
     def __init__(self):
         self.jobs = []
-        self.current_job = Job(10)
-        self.current_job.start_job()
+        self.current_job = None
     
     def create_job(self, length=10):
         newJob = Job(length)
