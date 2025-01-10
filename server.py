@@ -6,7 +6,7 @@ class JobHandler:
         self.jobs = []
         self.current_job = None
     
-    def create_job(self, length=10):
+    def create_job(self, length=25):
         newJob = Job(length)
         self.jobs.append(newJob)
         return "New Job has been created"
@@ -28,7 +28,7 @@ class JobHandler:
         return self.current_job.status()
         
 class Job:
-    def __init__(self, length=10):
+    def __init__(self, length=25):
         self.start = 0
         self.job_length = length 
     
