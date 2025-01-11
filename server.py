@@ -6,10 +6,15 @@ class JobHandler:
         self.jobs = []
         self.current_job = None
     
-    def create_job(self, length=25):
+    def create_job_10(self, length=10):
         newJob = Job(length)
         self.jobs.append(newJob)
-        return "New Job has been created"
+        return "New 10s Job has been created"
+
+    def create_job_25(self, length=25):
+        newJob = Job(length)
+        self.jobs.append(newJob)
+        return "New 25s Job has been created"
     
     def start_job(self):
         if (not self.current_job or self.current_job.status() == "completed"):
@@ -55,7 +60,11 @@ async def get_current_status():
 async def start_job():
     return {"result": handler.start_job()}
 
-@server.get("/create")
-async def create_job():
-    return {"result": handler.create_job()}
+@server.get("/create_10")
+async def create_job_10():
+    return {"result": handler.create_job_10()}
+
+@server.get("/create_25")
+async def create_job_25():
+    return {"result": handler.create_job_25()}
 
