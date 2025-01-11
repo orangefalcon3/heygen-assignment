@@ -1,20 +1,19 @@
 import time
 from fastapi import FastAPI
+from pydantic import BaseModel
+
+class Base(BaseModel):
+    length: int
 
 class JobHandler:
     def __init__(self):
         self.jobs = []
         self.current_job = None
     
-    def create_job_10(self, length=10):
+    def create_job(self, length=10):
         newJob = Job(length)
         self.jobs.append(newJob)
-        return "New 10s Job has been created"
-
-    def create_job_25(self, length=25):
-        newJob = Job(length)
-        self.jobs.append(newJob)
-        return "New 25s Job has been created"
+        return "New Job has been created"
     
     def start_job(self):
         if (not self.current_job or self.current_job.status() == "completed"):
@@ -28,9 +27,10 @@ class JobHandler:
             return "Error: another job is currently running"
     
     def get_current_status(self):
-        if (not self.current_job):
+        try:
+            return self.current_job.status()
+        except: 
             return "error"
-        return self.current_job.status()
         
 class Job:
     def __init__(self, length=25):
@@ -41,16 +41,18 @@ class Job:
         self.start = time.time()
 
     def status(self):
-        if self.start == 0:
+        try:
+            if self.start == 0:
+                return "pending"
+            elapsed_time = time.time() - self.start
+            if elapsed_time >= self.job_length:
+                return "completed"
             return "pending"
-        elapsed_time = time.time() - self.start
-        if elapsed_time >= self.job_length:
-            return "completed"
-        return "pending"
+        except:
+            return "error"
 
 server = FastAPI()
 handler = JobHandler()
-
 
 @server.get("/status")
 async def get_current_status():
@@ -60,11 +62,7 @@ async def get_current_status():
 async def start_job():
     return {"result": handler.start_job()}
 
-@server.get("/create_10")
-async def create_job_10():
-    return {"result": handler.create_job_10()}
-
-@server.get("/create_25")
-async def create_job_25():
-    return {"result": handler.create_job_25()}
+@server.post("/create")
+async def create_job(length: Base):
+    return {"result": handler.create_job(length.length)}
 

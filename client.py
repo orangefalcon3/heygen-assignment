@@ -1,5 +1,6 @@
 import urllib3
 import time
+import json
 
 class Client:
     def __init__(self, server_url: str):
@@ -15,15 +16,16 @@ class Client:
         response = self.http.request("GET", self.server_url + "/status")
         return response
     
-    # Create a new 10s job and add it to the job queue
-    def create_job_10(self):
-        response = self.http.request("GET", self.server_url + "/create_10")
+    # Create a new job and add it to the job queue
+    def create_job(self, length=10):
+        post_body = json.dumps({
+            "length": length,
+        })
+        response = self.http.request('POST', self.server_url + '/create',
+                 headers={'Content-Type': 'application/json'},
+                 body=post_body)
         return response
     
-    # Create a new 25s job and add it to the job queue
-    def create_job_25(self):
-        response = self.http.request("GET", self.server_url + "/create_25")
-        return response
     
     # Start the next job in the queue
     def start_job(self):
@@ -64,9 +66,6 @@ class Client:
             self.max_delay = max_delay
             self.backoff_factor = backoff_factor
         
-        print("Max Delay " + str(self.max_delay))
-        print("Last Five ET " + str(self.last_five))
-        
         curr_job_status = "N/A"
         curr_delay = self.min_delay
         
@@ -81,7 +80,6 @@ class Client:
                 print("Job Status is now \"" + str(response["result"]) + "\"")
                 curr_job_status = response["result"]
                 elapsed_time = time.time() - start_time
-                print("Elapsed Time: " + str(elapsed_time))
             
             if curr_job_status != "completed" and curr_job_status != "error":
                 time.sleep(min(curr_delay, self.max_delay))
@@ -91,7 +89,6 @@ class Client:
                     curr_delay *= self.backoff_factor
         
         if curr_job_status == "completed":
-            calls_per_sec = num_calls / elapsed_time
             self.calibrate(elapsed_time)
                 
         print("Number of Calls: " + str(num_calls))
@@ -102,16 +99,7 @@ if __name__ == "__main__":
     client = Client("http://localhost:8000")
 
     for i in range(5):        
-        response = client.create_job_10().json()
-        print(response["result"])
-        
-        response = client.start_job().json()
-        print(response["result"])
-        
-        client.monitor_job()
-    
-    for i in range(5):        
-        response = client.create_job_25().json()
+        response = client.create_job().json()
         print(response["result"])
         
         response = client.start_job().json()
