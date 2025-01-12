@@ -121,6 +121,10 @@ class Client:
         # Auto-calibrate if needed
         if automatic and curr_job_status == "completed":
             self.calibrate(elapsed_time)
+        
+        # Print Error Message
+        if curr_job_status == "error":
+            print("An error has occurred in this job")
                 
         # Print Metric
         print("Number of Calls: " + str(num_calls))
