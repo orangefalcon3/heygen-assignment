@@ -40,7 +40,7 @@ class Client:
             et_improvement = (et_average - elapsed_time) / et_average   
 
             if et_improvement > 0.10:
-                self.max_delay = max(self.max_delay * (0.95 - et_improvement), self.min_delay)
+                self.max_delay = max(self.max_delay * (0.95 - et_improvement), max(self.min_delay, elapsed_time / 10))
                 self.min_delay = max(self.min_delay * (0.95 - et_improvement), 0.05)
             else:
                 self.min_delay *= (1.05 - et_improvement)

@@ -13,7 +13,7 @@ class JobHandler:
     def create_job(self, length=10):
         newJob = Job(length)
         self.jobs.append(newJob)
-        return "New Job has been created"
+        return "New " + str(length) + "s Job has been created"
     
     def start_job(self):
         if (not self.current_job or self.current_job.status() == "completed"):

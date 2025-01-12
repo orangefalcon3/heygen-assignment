@@ -68,3 +68,8 @@ A response from the server indicating the success or failure of starting the job
 - `backoff_factor`: The growth of the spacing for the exponential backoff
 - `oscillation`: Determines if oscillation is being implemented
 - `automatic`: Determines if automatic calibration is being implemented
+
+## Assumptions and Possible Next Steps
+For this project, I operated under the assumption that the client does not know the length of the job that it is monitoring. If it knew the length, there would be no need to make multiple calls. The user would just make a single call once the job was over.
+
+For next steps, the pattern-based calibration algorithm could be improved with more knowledge of the types of jobs that are being run. If there are instances where the lengths of the jobs vary dramatically, the algorithm would be tuned in a different way than if the lengths of the jobs remained consistent. With this increased knowledge of the jobs, the algorithm could be tuned to improve the delay and number of calls.
