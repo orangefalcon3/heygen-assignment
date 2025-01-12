@@ -3,6 +3,8 @@ import time
 import json
 
 class Client:
+
+    # Initialize the client
     def __init__(self, server_url: str):
         self.server_url = server_url
         self.http = urllib3.PoolManager()
@@ -35,17 +37,26 @@ class Client:
     # Method to automatically calibrate exponential backoff to handle changes in job delays
     # Utilizes recent job history to try to take advantage of pattern matching
     def calibrate(self, elapsed_time):
-        if len(self.last_five) != 0:
-            et_average = sum(self.last_five) / len(self.last_five)
-            et_improvement = (et_average - elapsed_time) / et_average   
 
+        # Check if there is any existing history
+        if len(self.last_five) != 0:
+
+            # Find average elapsed time in history
+            et_average = sum(self.last_five) / len(self.last_five)
+
+            # Find improvement when compared to average
+            et_improvement = (et_average - elapsed_time) / et_average   
+            
             if et_improvement > 0.10:
+                # Decrease delay parameters if the execution time is lowered
                 self.max_delay = max(self.max_delay * (0.95 - et_improvement), max(self.min_delay, elapsed_time / 10))
                 self.min_delay = max(self.min_delay * (0.95 - et_improvement), 0.05)
             else:
+                # Increase delay parameters if the execution time is increased
                 self.min_delay *= (1.05 - et_improvement)
                 self.max_delay = min(self.max_delay * (1.05 - et_improvement), elapsed_time / 4)
         
+        # Update history
         self.last_five.append(elapsed_time)
         if len(self.last_five) > 5:
             self.last_five.pop(0)
@@ -61,48 +72,55 @@ class Client:
             oscillation=True,
             automatic=True
         ): 
+
+        # Set parameters manually if no auto-calibration
         if (not automatic):
             self.min_delay = min_delay
             self.max_delay = max_delay
             self.backoff_factor = backoff_factor
         
         curr_job_status = "N/A"
+
+        # Set spacing between calls
         curr_delay = self.min_delay
         
+        # Initialize metrics
         start_time = time.time()
         num_calls = 0
         
         while curr_job_status != "completed" and curr_job_status != "error":
+
+            # Request status
             response = self.request_status().json()
             num_calls += 1
             
+            # Check if there is a status change
             if response["result"] != curr_job_status:
+
+                # Print status update
                 print("Job Status is now \"" + str(response["result"]) + "\"")
+
+                # Update status
                 curr_job_status = response["result"]
+
+                # Find elapsed time
                 elapsed_time = time.time() - start_time
             
+            # Check if job is still running
             if curr_job_status != "completed" and curr_job_status != "error":
+
+                # Wait until next call
                 time.sleep(min(curr_delay, self.max_delay))
+
+                # Update spacing
                 if oscillation and curr_delay >= self.max_delay:
                     curr_delay = self.max_delay / self.backoff_factor
                 else:
                     curr_delay *= self.backoff_factor
         
-        if curr_job_status == "completed":
+        # Auto-calibrate if needed
+        if automatic and curr_job_status == "completed":
             self.calibrate(elapsed_time)
                 
+        # Print Metric
         print("Number of Calls: " + str(num_calls))
-                
-
-        
-if __name__ == "__main__":
-    client = Client("http://localhost:8000")
-
-    for i in range(5):        
-        response = client.create_job().json()
-        print(response["result"])
-        
-        response = client.start_job().json()
-        print(response["result"])
-        
-        client.monitor_job()
